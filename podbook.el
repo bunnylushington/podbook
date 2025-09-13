@@ -18,6 +18,7 @@
   port
   iframe
   livebook
+  directory
   label)
 
 (defun podbook (&optional obj)
@@ -37,19 +38,23 @@
                       podbook-kubectl file pod)))
     (shell-command cmd)))
 
-(defun podbook-copy-directory (dir &optional obj)
+(defun podbook-copy-directory (&optional dir obj)
   "Copy an entire directory to the livebook container."
-  (interactive "DDirectory: ")
+  (interactive)
   (let* ((obj (or obj (podbook--choose-configuration)))
+         (default (expand-file-name (podbook-directory obj)))
+         (dir (or dir (read-directory-name "Directory: " default)))
          (pod (podbook-livebook obj))
          (cmd (format "%s cp %s %s:/data"
-                      podbook-kubectl dir pod)))
+                      podbook-kubectl (expand-file-name dir) pod)))
     (shell-command cmd)))
 
-(defun podbook-pull-livebooks (dir &optional obj)
+(defun podbook-pull-livebooks (&optional dir obj)
   "Copy the /data directory from a livebook container."
-  (interactive "DDirectory: ")
+  (interactive)
   (let* ((obj (or obj (podbook--choose-configuration)))
+         (default (expand-file-name (podbook-directory obj)))
+         (dir (or dir (read-directory-name "Directory: " default)))
          (pod (podbook-livebook obj))
          (cmd (format "%s cp %s:/data %s"
                       podbook-kubectl pod dir)))
