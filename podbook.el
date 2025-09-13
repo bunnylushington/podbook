@@ -1,7 +1,7 @@
 ;;; podbook.el --- Manage Livebook instances in Kubernetes
 
 ;;; Commentary:
-;;
+;; 
 ;; This library provides a set of tools to manage Elixir Livebook
 ;; instances running within Kubernetes pods. It allows you to start,
 ;; stop, connect to, and manage file synchronization for different
@@ -20,7 +20,7 @@
 ;;         :project-b
 ;;         (:exec "project-b"
 ;;          :container "project-b-container"
-;;          :port 8081
+;;          :port 8090
 ;;          :directory "/path/to/your/project-b/notebooks"
 ;;          :label "project-b-label")))
 ;;
@@ -40,11 +40,39 @@
 (require 's)
 (require 'detached)
 
-(defvar podbook-configurations nil
-  "Configurations for various products/environments.")
+(defgroup podbook nil
+  "Manage Livebook instances in Kubernetes."
+  :group 'applications)
 
-(defvar podbook-kubectl "kubectl"
-  "The kubectl command.")
+(defcustom podbook-configurations nil
+  "Configurations for various products/environments."
+  :type '(alist :key-type symbol :value-type plist)
+  :group 'podbook)
+
+(defcustom podbook-kubectl "kubectl"
+  "The kubectl command."
+  :type 'string
+  :group 'podbook)
+
+(defcustom podbook-livebook-image "ghcr.io/livebook-dev/livebook"
+  "The Docker image to use for running Livebook."
+  :type 'string
+  :group 'podbook)
+
+(defcustom podbook-wait-timeout "60s"
+  "The timeout for waiting for a pod to become ready."
+  :type 'string
+  :group 'podbook)
+
+(defcustom podbook-release-distribution "name"
+  "The value for the RELEASE_DISTRIBUTION environment variable."
+  :type 'string
+  :group 'podbook)
+
+(defcustom podbook-release-node-name "livebook@127.0.0.1"
+  "The value for the RELEASE_NODE environment variable inside the Livebook container."
+  :type 'string
+  :group 'podbook)
 
 (cl-defstruct podbook
   "podbook configuration object"
@@ -208,7 +236,7 @@
                (format "%s wait --for=condition=ready pod/%s "
                        podbook-kubectl
                        (podbook-livebook obj))
-               "--timeout 60s")))
+               (format "--timeout %s" podbook-wait-timeout))))
     (shell-command cmd)))
 
 ;;;###autoload
@@ -283,14 +311,14 @@
   "Generate a start command.  Slow."
   (concat
    (format "%s run %s " podbook-kubectl (podbook-livebook obj))
-   "--image=ghcr.io/livebook-dev/livebook "
+   (format "--image=%s " podbook-livebook-image)
    (format "--env LIVEBOOK_DEFAULT_RUNTIME=\"attached:%s:%s\" "
            (podbook-release-node obj)
            (podbook-release-cookie obj))
-   "--env RELEASE_DISTRIBUTION=\"name\" "
+   (format "--env RELEASE_DISTRIBUTION=\"%s\" " podbook-release-distribution)
    (format "--env LIVEBOOK_PORT=%d " (podbook-port obj))
    (format "--env LIVEBOOK_IFRAME_PORT=%d " (podbook-iframe obj))
-   "--env RELEASE_NODE=\"livebook@127.0.0.1\""))
+   (format "--env RELEASE_NODE=\"%s\"" podbook-release-node-name)))
 
 (defun podbook--plist-keys (plist)
   "Return a list of all keys in a PLIST."
