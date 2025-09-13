@@ -28,6 +28,33 @@
         (podbook--do-post-startup obj)
       (podbook--do-startup obj))))
 
+(defun podbook-copy-file (file &optional obj)
+  "Copy a file into a livebook container."
+  (interactive "fFile: ")
+  (let* ((obj (or obj (podbook--choose-configuration)))
+         (pod (podbook-livebook obj))
+         (cmd (format "%s cp %s %s:/data"
+                      podbook-kubectl file pod)))
+    (shell-command cmd)))
+
+(defun podbook-copy-directory (dir &optional obj)
+  "Copy an entire directory to the livebook container."
+  (interactive "DDirectory: ")
+  (let* ((obj (or obj (podbook--choose-configuration)))
+         (pod (podbook-livebook obj))
+         (cmd (format "%s cp %s %s:/data"
+                      podbook-kubectl dir pod)))
+    (shell-command cmd)))
+
+(defun podbook-pull-livebooks (dir &optional obj)
+  "Copy the /data directory from a livebook container."
+  (interactive "DDirectory: ")
+  (let* ((obj (or obj (podbook--choose-configuration)))
+         (pod (podbook-livebook obj))
+         (cmd (format "%s cp %s:/data %s"
+                      podbook-kubectl pod dir)))
+    (shell-command cmd)))
+
 (defun podbook--do-startup (obj)
   (podbook-start obj)
   (podbook-wait obj)
