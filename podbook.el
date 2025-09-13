@@ -1,3 +1,41 @@
+;;; podbook.el --- Manage Livebook instances in Kubernetes
+
+;;; Commentary:
+;;
+;; This library provides a set of tools to manage Elixir Livebook
+;; instances running within Kubernetes pods. It allows you to start,
+;; stop, connect to, and manage file synchronization for different
+;; Livebook configurations.
+;;
+;; To use podbook, you need to configure it with your project details.
+;; Here is an example configuration for two different projects:
+;;
+;; (setq podbook-configurations
+;;       '(:project-a
+;;         (:exec "project-a"
+;;          :container "project-a-container"
+;;          :port 8080
+;;          :directory "/path/to/your/project-a/notebooks"
+;;          :label "project-a-label")
+;;         :project-b
+;;         (:exec "project-b"
+;;          :container "project-b-container"
+;;          :port 8081
+;;          :directory "/path/to/your/project-b/notebooks"
+;;          :label "project-b-label")))
+;;
+;; Main interactive functions:
+;;
+;; - `podbook`: Start or connect to a podbook. This is the main entry point.
+;; - `podbook-start`: Start a Livebook pod.
+;; - `podbook-stop`: Stop a Livebook pod.
+;; - `podbook-browse`: Open the Livebook URL in a browser.
+;; - `podbook-copy-file`: Copy a file into a livebook container.
+;; - `podbook-copy-directory`: Copy an entire directory to the livebook container.
+;; - `podbook-pull-livebooks`: Copy the /data directory from a livebook container.
+
+;;; Code:
+
 (require 'cl-lib)
 (require 's)
 (require 'detached)
@@ -7,9 +45,6 @@
 
 (defvar podbook-kubectl "kubectl"
   "The kubectl command.")
-
-(defvar podbook--status (make-hash-table :test 'equal)
-  "Retain the realtime statuses of podbook processes.")
 
 (cl-defstruct podbook
   "podbook configuration object"
@@ -21,6 +56,7 @@
   directory
   label)
 
+;;;###autoload
 (defun podbook (&optional obj)
   "Start or connect to a podbook."
   (interactive)
@@ -29,6 +65,7 @@
         (podbook--do-post-startup obj)
       (podbook--do-startup obj))))
 
+;;;###autoload
 (defun podbook-copy-file (file &optional obj)
   "Copy a file into a livebook container."
   (interactive "fFile: ")
@@ -38,6 +75,7 @@
                       podbook-kubectl file pod)))
     (shell-command cmd)))
 
+;;;###autoload
 (defun podbook-copy-directory (&optional dir obj)
   "Copy an entire directory to the livebook container."
   (interactive)
@@ -49,6 +87,7 @@
                       podbook-kubectl (expand-file-name dir) pod)))
     (shell-command cmd)))
 
+;;;###autoload
 (defun podbook-pull-livebooks (&optional dir obj)
   "Copy the /data directory from a livebook container."
   (interactive)
@@ -70,6 +109,7 @@
     (podbook-start-port-forward obj))
   (podbook-browse obj))
 
+;;;###autoload
 (defun podbook-running-p (&optional obj)
   "Returns t if the podbook is running."
   (interactive)
@@ -78,6 +118,7 @@
                       podbook-kubectl (podbook-livebook obj))))
     (string= (shell-command-to-string cmd) "Running")))
 
+;;;###autoload
 (defun podbook-pod-name (&optional obj)
   "Return the name of the pod we will attach to."
   (interactive)
@@ -94,6 +135,7 @@
     (podbook--interactive-results pod-name)
     pod-name))
 
+;;;###autoload
 (defun podbook-release-node (&optional obj)
   "Return the name of the Elixir release node."
   (interactive)
@@ -109,6 +151,7 @@
     (podbook--interactive-results release-node)
     release-node))
 
+;;;###autoload
 (defun podbook-release-cookie (&optional obj)
   "Return the value of the Elixir release cookie."
   (interactive)
@@ -124,6 +167,7 @@
     (podbook--interactive-results release-cookie)
     release-cookie))
 
+;;;###autoload
 (defun podbook-start (&optional obj)
   "Start a Livebook."
   (interactive)
@@ -132,6 +176,7 @@
          (res (shell-command-to-string cmd)))
     (podbook--interactive-results res)))
 
+;;;###autoload
 (defun podbook-stop (&optional obj)
   "Stop a Livebook."
   (interactive)
@@ -140,6 +185,7 @@
                       podbook-kubectl (podbook-livebook obj))))
     (shell-command cmd)))
 
+;;;###autoload
 (defun podbook-running ()
   "Returns a list of the running livebook pods."
   (interactive)
@@ -153,6 +199,7 @@
     (podbook--interactive-results (string-join pods ", "))
     pods))
 
+;;;###autoload
 (defun podbook-wait (&optional obj)
   "Wait for a livebook to become available; blocks."
   (interactive)
@@ -164,6 +211,7 @@
                "--timeout 60s")))
     (shell-command cmd)))
 
+;;;###autoload
 (defun podbook-url (&optional obj)
   "Return the URL for a running livebook."
   (interactive)
@@ -182,6 +230,7 @@
           (message "Could not find URL."))
         nil))))
 
+;;;###autoload
 (defun podbook-browse (&optional obj)
   "Open the browser to Livebook instance."
   (interactive)
@@ -191,6 +240,7 @@
         (browse-url url)
       (message "Unable to find URL."))))
 
+;;;###autoload
 (defun podbook-start-port-forward (&optional obj)
   "Establish port forward to Livebook."
   (interactive)
@@ -204,6 +254,7 @@
          (buf name))
     (detached-shell-command cmd)))
 
+;;;###autoload
 (defun podbook-stop-port-forward (&optional obj)
   "Stop a port forwarding session."
   (interactive)
@@ -212,6 +263,7 @@
     (when session
       (detached-kill-session session t))))
 
+;;;###autoload
 (defun podbook-port-forward-session (&optional obj)
   "Find a port forwarding session."
   (interactive)
