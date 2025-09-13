@@ -243,3 +243,5 @@
          (choices (mapcar #'symbol-name keys))
          (selected (completing-read "Select Livebook " choices nil t)))
     (podbook--make-target (intern selected))))
+
+(provide 'podbook)
