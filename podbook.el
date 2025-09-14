@@ -1,7 +1,7 @@
 ;;; podbook.el --- Manage Livebook instances in Kubernetes
 
 ;;; Commentary:
-;; 
+;;
 ;; This library provides a set of tools to manage Elixir Livebook
 ;; instances running within Kubernetes pods. It allows you to start,
 ;; stop, connect to, and manage file synchronization for different
@@ -12,17 +12,39 @@
 ;;
 ;; (setq podbook-configurations
 ;;       '(:project-a
-;;         (:exec "project-a"
+;;         (:exec "project_a"
 ;;          :container "project-a-container"
 ;;          :port 8080
 ;;          :directory "/path/to/your/project-a/notebooks"
 ;;          :label "project-a-label")
 ;;         :project-b
-;;         (:exec "project-b"
+;;         (:exec "project_b"
 ;;          :container "project-b-container"
 ;;          :port 8090
 ;;          :directory "/path/to/your/project-b/notebooks"
 ;;          :label "project-b-label")))
+;;
+;; ** Configuration
+;;
+;; The `podbook-configurations` variable is a property list (plist) where
+;; each key is a symbol identifying a project, and the value is another
+;; plist containing the following attributes:
+;;
+;; - `:exec`: The name of the executable for the Elixir release (e.g., "my_app").
+;;
+;; - `:container`: The base name for the new Livebook pod. The final pod name
+;;   will be this value with "-livebook" appended (e.g., if you
+;;   provide "my-app", the pod will be named "my-app-livebook").
+;;
+;; - `:port`: The local and remote port to use for the Livebook instance.
+;;   The required iframe port will be automatically set to `:port + 1`.
+;;
+;; - `:directory`: The default local directory for file synchronization
+;;   with the Livebook container.
+;;
+;; - `:label`: A substring used to identify the running application pod.
+;;   For example, if your pods are named "my-app-prod-a1b2c3d4",
+;;   you could use "my-app-prod" as the label.
 ;;
 ;; Main interactive functions:
 ;;
