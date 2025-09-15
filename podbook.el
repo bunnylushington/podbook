@@ -124,7 +124,7 @@
   (let* ((obj (or obj (podbook--choose-configuration)))
          (pod (podbook-livebook obj))
          (cmd (format "%s cp %s %s:/data"
-                      podbook-kubectl file pod)))
+                      (podbook--kubectl obj) file pod)))
     (shell-command cmd)))
 
 ;;;###autoload
@@ -136,7 +136,7 @@
          (dir (or dir (read-directory-name "Directory: " default)))
          (pod (podbook-livebook obj))
          (cmd (format "%s cp %s %s:/data"
-                      podbook-kubectl (expand-file-name dir) pod)))
+                      (podbook--kubectl obj) (expand-file-name dir) pod)))
     (shell-command cmd)))
 
 ;;;###autoload
@@ -148,7 +148,7 @@
          (dir (or dir (read-directory-name "Directory: " default)))
          (pod (podbook-livebook obj))
          (cmd (format "%s cp %s:/data %s"
-                      podbook-kubectl pod dir)))
+                      (podbook--kubectl obj) pod dir)))
     (shell-command cmd)))
 
 (defun podbook--do-startup (obj)
@@ -167,7 +167,7 @@
   (interactive)
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd (format "%s get pod %s -o jsonpath=\"{.status.phase}\""
-                      podbook-kubectl (podbook-livebook obj))))
+                      (podbook--kubectl obj) (podbook-livebook obj))))
     (string= (shell-command-to-string cmd) "Running")))
 
 ;;;###autoload
@@ -177,7 +177,7 @@
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd
           (concat
-           (format "%s get pods " podbook-kubectl)
+           (format "%s get pods " (podbook--kubectl obj))
            "--field-selector=status.phase=Running "
            "-o=custom-columns=NAME:.metadata.name "
            "--no-headers "
@@ -194,7 +194,7 @@
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd (concat
                (format "%s exec %s -c %s -- bin/%s "
-                       podbook-kubectl
+                       (podbook--kubectl obj)
                        (podbook-pod-name obj)
                        (podbook-container obj)
                        (podbook-exec obj))
@@ -210,7 +210,7 @@
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd (concat
                (format "%s exec %s -c %s -- bin/%s "
-                       podbook-kubectl
+                       (podbook--kubectl obj)
                        (podbook-pod-name obj)
                        (podbook-container obj)
                        (podbook-exec obj))
@@ -234,7 +234,7 @@
   (interactive)
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd (format "%s delete pod %s"
-                      podbook-kubectl (podbook-livebook obj))))
+                      (podbook--kubectl obj) (podbook-livebook obj))))
     (shell-command cmd)))
 
 ;;;###autoload
@@ -242,7 +242,7 @@
   "Returns a list of the running livebook pods."
   (interactive)
   (let* ((cmd (concat
-               (format "%s get pods " podbook-kubectl)
+               (format "%s get pods " (podbook--kubectl obj))
                "--field-selector=status.phase=Running "
                "-o=custom-columns=NAME:.metadata.name "
                "--no-headers "
@@ -258,7 +258,7 @@
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd (concat
                (format "%s wait --for=condition=ready pod/%s "
-                       podbook-kubectl
+                       (podbook--kubectl obj)
                        (podbook-livebook obj))
                (format "--timeout %s" podbook-wait-timeout))))
     (shell-command cmd)))
@@ -269,7 +269,7 @@
   (interactive)
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd (format "%s logs %s"
-                      podbook-kubectl
+                      (podbook--kubectl obj)
                       (podbook-livebook obj)))
          (log (shell-command-to-string cmd))
          (url (podbook--extract-url-from-string log)))
@@ -298,7 +298,7 @@
   (interactive)
   (let* ((obj (or obj (podbook--choose-configuration)))
          (cmd (format "%s port-forward %s %d %d "
-                      podbook-kubectl
+                      (podbook--kubectl obj)
                       (podbook-livebook obj)
                       (podbook-port obj)
                       (podbook-iframe obj)))
@@ -340,7 +340,7 @@
 (defun podbook--start-command (obj)
   "Generate a start command.  Slow."
   (concat
-   (format "%s run %s " podbook-kubectl (podbook-livebook obj))
+   (format "%s run %s " (podbook--kubectl obj) (podbook-livebook obj))
    (format "--image=%s " podbook-livebook-image)
    (format "--env LIVEBOOK_DEFAULT_RUNTIME=\"attached:%s:%s\" "
            (podbook-release-node obj)
