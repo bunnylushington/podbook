@@ -100,6 +100,8 @@
   "podbook configuration object"
   exec
   container
+  context-id
+  context
   port
   iframe
   livebook
@@ -329,6 +331,12 @@
       (detached-list-view-session session))
     session))
 
+(defun podbook--kubectl (obj)
+  "The kubectl command, with options, to run."
+  (format "%s --context %s"
+          podbook-kubectl
+          (podbook-context obj)))
+
 (defun podbook--start-command (obj)
   "Generate a start command.  Slow."
   (concat
@@ -350,6 +358,10 @@
       (setq plist (cddr plist)))
     (nreverse keys)))
 
+(defun podbook--get-context (identifier)
+  "Return the context string associated with IDENTIFIER."
+  (cdr (assoc identifier podbook-contexts)))
+
 (defun podbook--extract-url-from-string (s)
     "Extract the first URL found in a string S.
   Returns the URL as a string, or nil if no URL is found."
@@ -365,10 +377,12 @@
 (defun podbook--make-target (id)
   "Return a podbook object representing ID."
   (let* ((raw (plist-get podbook-configurations id))
+         (context (podbook--get-context (plist-get raw :context-id)))
          (iframe (1+ (plist-get raw :port)))
          (livebook (format "%s-livebook" (plist-get raw :container)))
          (attrs (append raw `(:iframe ,iframe
-                              :livebook  ,livebook))))
+                                      :context, context
+                                      :livebook  ,livebook))))
     (apply #'make-podbook attrs)))
 
 (defun podbook--choose-configuration ()
