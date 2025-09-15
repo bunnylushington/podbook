@@ -7,46 +7,45 @@
 ;; stop, connect to, and manage file synchronization for different
 ;; Livebook configurations.
 ;;
-;; To use podbook, you need to configure it with your project details.
-;; Here is an example configuration for two different projects:
-;;
-;; (setq podbook-configurations
-;;       '(:project-a
-;;         (:exec "project_a"
-;;          :container "project-a-container"
-;;          :port 8080
-;;          :directory "/path/to/your/project-a/notebooks"
-;;          :label "project-a-label")
-;;         :project-b
-;;         (:exec "project_b"
-;;          :container "project-b-container"
-;;          :port 8090
-;;          :directory "/path/to/your/project-b/notebooks"
-;;          :label "project-b-label")))
-;;
 ;; ** Configuration
 ;;
-;; The `podbook-configurations` variable is a property list (plist) where
-;; each key is a symbol identifying a project, and the value is another
-;; plist containing the following attributes:
+;; Configuration is managed via two global variables:
 ;;
-;; - `:exec`: The name of the executable for the Elixir release (e.g., "my_app").
+;; 1. `podbook-contexts`: An association list (alist) that maps a short,
+;;    memorable symbol (e.g., :staging) to your full Kubernetes
+;;    context name string.
 ;;
-;; - `:container`: The base name for the new Livebook pod. The final pod name
-;;   will be this value with "-livebook" appended (e.g., if you
-;;   provide "my-app", the pod will be named "my-app-livebook").
+;; 2. `podbook-configurations`: A property list (plist) that defines the
+;;    specifics for each project you want to connect to.
 ;;
-;; - `:port`: The local and remote port to use for the Livebook instance.
-;;   The required iframe port will be automatically set to `:port + 1`.
+;; Here is an example configuration using placeholder values:
 ;;
-;; - `:directory`: The default local directory for file synchronization
-;;   with the Livebook container.
+;; (setq podbook-contexts
+;;       '((:staging . "gke_my-project_us-central1-a_staging-cluster")
+;;         (:production . "gke_my-project_us-central1-a_production-cluster")))
 ;;
+;; (setq podbook-configurations
+;;       '(:stg-app-alpha
+;;         (:exec "app_alpha" :container "app-alpha-container"
+;;                :directory "~/projects/app-alpha/notebooks"
+;;                :context-id :staging
+;;                :port 10000 :label "app-alpha")
+;;         :prod-app-beta
+;;         (:exec "app_beta" :container "app-beta-container"
+;;                :directory "~/projects/app-beta/notebooks"
+;;                :context-id :production
+;;                :port 20000 :label "app-beta")))
+;;
+;; The `podbook-configurations` plist supports the following attributes:
+;;
+;; - `:exec`: The name of the executable for the Elixir release.
+;; - `:container`: The base name for the new Livebook pod.
+;; - `:port`: The local and remote port for the Livebook instance.
+;; - `:directory`: The default local directory for file synchronization.
 ;; - `:label`: A substring used to identify the running application pod.
-;;   For example, if your pods are named "my-app-prod-a1b2c3d4",
-;;   you could use "my-app-prod" as the label.
+;; - `:context-id`: A symbol that maps to a context in `podbook-contexts`.
 ;;
-;; Main interactive functions:
+;; ** Main interactive functions:
 ;;
 ;; - `podbook`: Start or connect to a podbook. This is the main entry point.
 ;; - `podbook-start`: Start a Livebook pod.
