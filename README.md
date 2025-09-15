@@ -4,6 +4,10 @@
 
 This package provides a simple interface for starting, stopping, and connecting to Elixir Livebook pods running in a Kubernetes cluster. It is designed for projects where you want to attach a Livebook instance to an already-running application pod.
 
+## Requirements
+
+- A working `kubectl` command in your system's `PATH`, configured to connect to your Kubernetes cluster(s).
+
 ## Installation
 
 Ensure that the dependencies (`s.el` and `detached.el`) are installed from MELPA or your preferred package source.

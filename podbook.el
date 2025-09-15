@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; podbook.el --- Manage Livebook instances in Kubernetes
 
 ;;; Commentary:
